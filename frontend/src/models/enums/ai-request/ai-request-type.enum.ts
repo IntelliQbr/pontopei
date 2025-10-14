@@ -1,0 +1,5 @@
+export enum AIRequestType {
+	PEI_CREATION = "PEI_CREATION",
+	PEI_RENEWAL = "PEI_RENEWAL",
+	WEEKLY_PLAN = "WEEKLY_PLAN",
+}
