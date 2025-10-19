@@ -1,0 +1,61 @@
+apiVersion: appsv1
+kind: Deployment
+metadata:
+  name: pontopei-backend-production
+  labels:
+    app: pontopei-backend
+    env: production
+spec:
+  replicas: 3 # Mais réplicas para produçao
+  selector:
+    matchLabels:
+      app: pontopei-backend
+      env: production
+  template:
+    metadata:
+      labels:
+        app: pontopei-backend
+        env: production
+    spec:
+      containers:
+        - name: backend
+          image: 697369419973.dkr.ecr.us-east-1.amazonaws.compontopei-backend:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DATABASE_URL
+              value: "postgresql:admin:@<SEU_ENDPOINT_RDS_PROD>:5432pontopeidb" # Endpoint do RDS de produçao
+            - name: REDIS_HOST
+              value: "<SEU_ENDPOINT_REDIS_PROD>" # Endpoint do Redis de produçao
+            - name: REDIS_PORT
+              value: "6379"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets-prod
+                  key: JWT_SECRET
+            # ... outras variáveis de ambiente
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "400m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pontopei-backend-production-service
+  labels:
+    app: pontopei-backend
+    env: production
+spec:
+  selector:
+    app: pontopei-backend
+    env: production
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer

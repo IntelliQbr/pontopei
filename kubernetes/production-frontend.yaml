@@ -1,0 +1,52 @@
+apiVersion: appsv1
+kind: Deployment
+metadata:
+  name: pontopei-frontend-production
+  labels:
+    app: pontopei-frontend
+    env: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pontopei-frontend
+      env: production
+  template:
+    metadata:
+      labels:
+        app: pontopei-frontend
+        env: production
+    spec:
+      containers:
+        - name: frontend
+          image: 697369419973.dkr.ecr.us-east-1.amazonaws.compontopei-frontend:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: "http:pontopei-backend-production-service" # Endpoint interno do serviço de backend de produçao
+            # ... outras variáveis de ambiente
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "400m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pontopei-frontend-production-service
+  labels:
+    app: pontopei-frontend
+    env: production
+spec:
+  selector:
+    app: pontopei-frontend
+    env: production
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer

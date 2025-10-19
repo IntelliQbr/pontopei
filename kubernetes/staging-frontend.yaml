@@ -1,0 +1,52 @@
+apiVersion: appsv1
+kind: Deployment
+metadata:
+  name: pontopei-frontend-staging
+  labels:
+    app: pontopei-frontend
+    env: staging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pontopei-frontend
+      env: staging
+  template:
+    metadata:
+      labels:
+        app: pontopei-frontend
+        env: staging
+    spec:
+      containers:
+        - name: frontend
+          image: 697369419973.dkr.ecr.us-east-1.amazonaws.compontopei-frontend:latest
+          ports:
+            - containerPort: 3000 # Porta que seu frontend Next.js escuta
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: "http:pontopei-backend-staging-service" # Endpoint interno do serviço de backend no Kubernetes
+            # ... outras variáveis de ambiente necessárias para o frontend
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pontopei-frontend-staging-service
+  labels:
+    app: pontopei-frontend
+    env: staging
+spec:
+  selector:
+    app: pontopei-frontend
+    env: staging
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer

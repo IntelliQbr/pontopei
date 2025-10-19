@@ -1,0 +1,61 @@
+apiVersion: appsv1
+kind: Deployment
+metadata:
+  name: pontopei-backend-staging
+  labels:
+    app: pontopei-backend
+    env: staging
+spec:
+  replicas: 2 # Número de instâncias do seu backend
+  selector:
+    matchLabels:
+      app: pontopei-backend
+      env: staging
+  template:
+    metadata:
+      labels:
+        app: pontopei-backend
+        env: staging
+    spec:
+      containers:
+        - name: backend
+          image: 697369419973.dkr.ecr.us-east-1.amazonaws.compontopei-backend:latest
+          ports:
+            - containerPort: 3000 # Porta que seu backend NestJS escuta
+          env:
+            - name: DATABASE_URL
+              value: "postgresql:admin:@<SEU_ENDPOINT_RDS>:5432pontopeidb" # Substitua pelo endpoint do seu RDS
+            - name: REDIS_HOST
+              value: "<SEU_ENDPOINT_REDIS>" # Substitua pelo endpoint do seu Redis
+            - name: REDIS_PORT
+              value: "6379"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets # Nome do Secret do Kubernetes
+                  key: JWT_SECRET # Chave dentro do Secret
+            # ... outras variáveis de ambiente necessárias para o backend
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pontopei-backend-staging-service
+  labels:
+    app: pontopei-backend
+    env: staging
+spec:
+  selector:
+    app: pontopei-backend
+    env: staging
+  ports:
+    - protocol: TCP
+      port: 80 # Porta externa
+      targetPort: 3000 # Porta do container
+  type: LoadBalancer # Cria um Load Balancer para acesso externo
